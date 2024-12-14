@@ -1,8 +1,10 @@
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
+import { Context } from "../store/appContext"; // Importar el contexto de Flux
 import { Link } from "react-router-dom";
 import "../../styles/navbar.css";
 
 export const Navbar = () => {
+  const { store } = useContext(Context);
   const [authToken, setAuthToken] = useState(null);
 
   useEffect(() => {
@@ -51,11 +53,17 @@ export const Navbar = () => {
               </a>
             </li>
           </ul>
-          <form className="d-flex" role="search">
-            <Link className="btn btn-outline-success" to="/login">
-              Login
-            </Link>
-          </form>
+          <div>
+            {store.authToken ? (
+              <button className="btn btn-danger" onClick={handleLogout}>
+                Logout
+              </button>
+            ) : (
+              <Link to="/login">
+                <button className="btn btn-success">Login</button>
+              </Link>
+            )}
+          </div>
         </div>
       </div>
     </nav>

@@ -1,57 +1,61 @@
 const getState = ({ getStore, getActions, setStore }) => {
 	return {
 		store: {
-		  token: null,
-		},
-		actions: {
-		  login: async (email, password) => {
-			try {
-			  const resp = await fetch(process.env.BACKEND_URL + "/api/login", {
-				method: "POST",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({ email, password }),
-			  });
-	
-			  if (resp.ok) {
-				const data = await resp.json();
-				localStorage.setItem("authToken", data.token);
-				setStore({ token: data.token });
-				return true;
-			  } else {
-				return false;
+			authToken: null,
+			user: null,
+		  },
+		  actions: {
+			login: async (email, password) => {
+				try {
+				  const resp = await fetch(process.env.BACKEND_URL + "/api/login", {
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify({ email, password }),
+				  });
+			  
+				  if (resp.ok) {
+					const token = await resp.text(); // Procesa la respuesta como texto, no como JSON
+					localStorage.setItem("authToken", token);
+					setStore({ authToken: token });
+					return { success: true, message: "Login exitoso" };
+				  } else {
+					const error = await resp.json(); // Esto seguirá siendo válido para mensajes de error
+					return { success: false, message: error.message || "Error en el login" };
+				  }
+				} catch (err) {
+				  console.error("Error en login:", err);
+				  return { success: false, message: "Error de conexión" };
+				}
+			  },
+		
+			  logout: () => {
+				localStorage.removeItem("authToken");
+				setStore({ authToken: null });
+				console.log("Usuario deslogueado exitosamente.");
+			  },
+		
+	  
+			signup: async (name,email, password) => {
+			  try {
+				const resp = await fetch(process.env.BACKEND_URL + "api/signup", {
+				  method: "POST",
+				  headers: { "Content-Type": "application/json" },
+				  body: JSON.stringify({ name, email, password }),
+				});
+	  
+				if (resp.ok) {
+				  const data = await resp.json();
+				  return { success: true, message: "Registro exitoso" };
+				} else {
+				  const error = await resp.json();
+				  return { success: false, message: error.message || "Error en el registro" };
+				}
+			  } catch (err) {
+				console.error("Error en signup:", err);
+				return { success: false, message: "Error de conexión" };
 			  }
-			} catch (error) {
-			  console.error("Error during login:", error);
-			  return false;
-			}
+			},
 		  },
-	
-		  register: async (email, password) => {
-			try {
-			  const resp = await fetch(process.env.BACKEND_URL + "/api/signup", {
-				method: "POST",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({ email, password }),
-			  });
-	
-			  return resp.ok;
-			} catch (error) {
-			  console.error("Error during registration:", error);
-			  return false;
-			}
-		  },
-	
-		  loadTokenFromStorage: () => {
-			const token = localStorage.getItem("authToken");
-			if (token) setStore({ token });
-		  },
-	
-		  logout: () => {
-			localStorage.removeItem("authToken");
-			setStore({ token: null });
-		  },
-		},
+		};
 	  };
-	};
-	
-	export default getState;
+	  export default getState;

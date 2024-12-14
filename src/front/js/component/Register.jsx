@@ -1,17 +1,52 @@
-import React, { useState } from "react";
-import "../../styles/register.css"; // Archivo CSS
+import React, { useState, useContext, useEffect } from "react";
+import { Context } from "../store/appContext"; // Importar el contexto de Flux
+import "../../styles/register.css";
 
 export const Register = () => {
-  const [activeTab, setActiveTab] = useState("login");
+  const { actions } = useContext(Context); // Acceder a las acciones del Flux
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    password: "",
+  });
+  const [activeTab, setActiveTab] = useState("login"); // Controlar si es login o signup
+  const [message, setMessage] = useState("");
+
+  // Controlar si el componente está montado
+  const [isMounted, setIsMounted] = useState(true);
+
+  useEffect(() => {
+    setIsMounted(true); // Marcar como montado
+    return () => setIsMounted(false); // Marcar como desmontado
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    onSave(formData); // Llama a onSave en el submit
+
+    if (activeTab === "login") {
+      const result = await actions.login(formData.email, formData.password);
+      if (isMounted) setMessage(result.message);
+    } else {
+      const result = await actions.signup(
+        formData.name,
+        formData.email,
+        formData.password
+      );
+      if (isMounted) {
+        if (result.success) {
+          alert("Usuario registrado exitosamente.");
+          setFormData({ name: "", email: "", password: "" }); // Limpiar formulario
+          setActiveTab("login"); // Cambiar a login
+        } else {
+          setMessage(result.message);
+        }
+      }
+    }
   };
 
   return (
@@ -21,90 +56,115 @@ export const Register = () => {
           <div className="row full-height justify-content-center">
             <div className="col-12 text-center align-self-center py-5">
               <div className="section pb-5 pt-5 pt-sm-2 text-center">
-                <h6 className="mb-0 pb-3"><span>Log In </span><span>Sign Up</span></h6>
-                <input className="checkbox" type="checkbox" id="reg-log" name="reg-log" />
+                <h6 className="mb-0 pb-3">
+                  <span onClick={() => setActiveTab("login")}>Log In</span>
+                  <span onClick={() => setActiveTab("signup")}>Sign Up</span>
+                </h6>
+                <input
+                  className="checkbox"
+                  type="checkbox"
+                  id="reg-log"
+                  name="reg-log"
+                  checked={activeTab === "signup"}
+                  onChange={() =>
+                    setActiveTab(activeTab === "login" ? "signup" : "login")
+                  }
+                />
                 <label htmlFor="reg-log"></label>
                 <div className="card-3d-wrap mx-auto">
                   <div className="card-3d-wrapper">
-                    <div className="card-front">
-                      <div className="center-wrap">
-                        <div className="section text-center">
-                          <h4 className="mb-4 pb-3">Log In</h4>
-                          <div className="form-group">
-                            <input
-                              type="email"
-                              className="form-style"
-                              id="email-login"
-                              name="email"
-                              placeholder="Su Correo Electrónico"
-                            // value={formData.email}
-                            // onChange={handleChange}
-                            />
-                            <i className="input-icon uil uil-at"></i>
-                          </div>
-                          <div className="form-group mt-2">
-                            <input
-                              type="password"
-                              className="form-style"
-                              id="password-login"
-                              name="password"
-                              placeholder="Su Contraseña"
-                            // value={formData.password}
-                            // onChange={handleChange}
-                            />
-                            <i className="input-icon uil uil-lock-alt"></i>
-                          </div>
-                          <a href="#" className="btn mt-4">submit</a>
-                          <p className="mb-0 mt-4 text-center"><a href="#0" className="link">Forgot your password?</a></p>
+                    {activeTab === "login" && (
+                      <div className="card-front">
+                        <div className="center-wrap">
+                          <form className="section text-center" onSubmit={handleSubmit}>
+                            <h4 className="mb-4 pb-3">Log In</h4>
+                            <div className="form-group">
+                              <input
+                                type="email"
+                                className="form-style"
+                                id="email-login"
+                                name="email"
+                                placeholder="Su Correo Electrónico"
+                                value={formData.email}
+                                onChange={handleChange}
+                              />
+                              <i className="input-icon uil uil-at"></i>
+                            </div>
+                            <div className="form-group mt-2">
+                              <input
+                                type="password"
+                                className="form-style"
+                                id="password-login"
+                                name="password"
+                                placeholder="Su Contraseña"
+                                value={formData.password}
+                                onChange={handleChange}
+                              />
+                              <i className="input-icon uil uil-lock-alt"></i>
+                            </div>
+                            <button type="submit" className="btn mt-4">
+                              Submit
+                            </button>
+                            <p className="mb-0 mt-4 text-center">
+                              <a href="#0" className="link">
+                                Forgot your password?
+                              </a>
+                            </p>
+                          </form>
                         </div>
                       </div>
-                    </div>
-                    <div className="card-back">
-                      <div className="center-wrap">
-                        <div className="section text-center">
-                          <h4 className="mb-4 pb-3">Sign Up</h4>
-                          <div className="form-group">
-                            <input
-                              type="text"
-                              className="form-style"
-                              id="name"
-                              name="name"
-                              placeholder="Su nombre Completo"
-                            // value={formData.name}
-                            // onChange={handleChange}
-                            />
-                            <i className="input-icon uil uil-user"></i>
-                          </div>
-                          <div className="form-group mt-2">
-                            <input
-                              type="email-signup"
-                              className="form-style"
-                              id="email"
-                              name="email"
-                              placeholder="Su Correo Electrónico"
-                            // value={formData.email}
-                            // onChange={handleChange}
-                            />
-                            <i className="input-icon uil uil-at"></i>
-                          </div>
-                          <div className="form-group mt-2">
-                            <input
-                              type="password"
-                              className="form-style"
-                              id="password-signup"
-                              name="password"
-                              placeholder="Su Contraseña"
-                            // value={formData.password}
-                            // onChange={handleChange}
-                            />
-                            <i className="input-icon uil uil-lock-alt"></i>
-                          </div>
-                          <a href="#" className="btn mt-4">submit</a>
+                    )}
+                    {activeTab === "signup" && (
+                      <div className="card-back">
+                        <div className="center-wrap">
+                          <form className="section text-center" onSubmit={handleSubmit}>
+                            <h4 className="mb-4 pb-3">Sign Up</h4>
+                            <div className="form-group">
+                              <input
+                                type="text"
+                                className="form-style"
+                                id="name"
+                                name="name"
+                                placeholder="Su Nombre Completo"
+                                value={formData.name}
+                                onChange={handleChange}
+                              />
+                              <i className="input-icon uil uil-user"></i>
+                            </div>
+                            <div className="form-group mt-2">
+                              <input
+                                type="email"
+                                className="form-style"
+                                id="email-signup"
+                                name="email"
+                                placeholder="Su Correo Electrónico"
+                                value={formData.email}
+                                onChange={handleChange}
+                              />
+                              <i className="input-icon uil uil-at"></i>
+                            </div>
+                            <div className="form-group mt-2">
+                              <input
+                                type="password"
+                                className="form-style"
+                                id="password-signup"
+                                name="password"
+                                placeholder="Su Contraseña"
+                                value={formData.password}
+                                onChange={handleChange}
+                              />
+                              <i className="input-icon uil uil-lock-alt"></i>
+                            </div>
+                            <button type="submit" className="btn mt-4">
+                              Submit
+                            </button>
+                          </form>
                         </div>
                       </div>
-                    </div>
+                    )}
                   </div>
                 </div>
+                {message && <p className="mt-4">{message}</p>}
               </div>
             </div>
           </div>
