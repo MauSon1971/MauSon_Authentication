@@ -25,24 +25,37 @@ def handle_hello():
 
 @api.route('/signup', methods=['POST'])
 def signup():
-    data = request.get_json()
-    email = data.get('email')
-    password = data.get('password')
+    try:
+        data = request.get_json()
+        print("Datos recibidos:", data)
 
-    if not email or not password:
-        return jsonify({"message": "El email y password son requeridos"}), 400
+        name = data.get('name')
+        email = data.get('email')
+        password = data.get('password')
+        print("Datos procesados - Name:", name, "Email:", email)
 
-    # Verifica si el usuario ya existe
-    if User.query.filter_by(email=email).first():
-        return jsonify({"message": "El usuario ya existe"}), 400
+        if not name or not email or not password:
+            print("Datos incompletos")
+            return jsonify({"message": "Todos los campos son requeridos"}), 400
 
-    # Crea el usuario con contraseña en hash
-    hashed_password = generate_password_hash(password)
-    new_user = User(email=email, password=hashed_password)
-    db.session.add(new_user)
-    db.session.commit()
+        if User.query.filter_by(email=email).first():
+            print("Usuario ya existe")
+            return jsonify({"message": "El usuario ya existe"}), 400
 
-    return jsonify({"message": "Usuario registrado exitosamente"}), 201
+        hashed_password = generate_password_hash(password)
+        print("Contraseña hasheada correctamente")
+
+        new_user = User(name=name, email=email, password=hashed_password, is_active=True)
+        print("Intentando guardar el usuario en la base de datos...")
+
+        db.session.add(new_user)
+        db.session.commit()
+        print("Usuario guardado exitosamente")
+
+        return jsonify({"message": "Usuario registrado exitosamente"}), 201
+    except Exception as e:
+        print(f"Error en el endpoint /signup: {str(e)}")
+        return jsonify({"message": "Error interno en el servidor", "error": str(e)}), 500
 
 @api.route ('/login', methods=['POST'])
 def handle_Login():
@@ -89,6 +102,7 @@ def get_user(user_id=None):
 def create_user():
     try:
         data = request.get_json()
+        name = data.get('name')
         email = data.get('email')
         password = data.get('password')
 
@@ -103,7 +117,7 @@ def create_user():
         hashed_password = generate_password_hash(password)
 
         # Crear nuevo usuario
-        new_user = User(email=email, password=hashed_password, is_active=True)
+        new_user = User(name=name, email=email, password=hashed_password, is_active=True)
         db.session.add(new_user)
         db.session.commit()
 
@@ -121,6 +135,7 @@ def modify_user(user_id):  # Nombre único para la función
             return jsonify({"message": "Usuario no encontrado"}), 404
 
         data = request.get_json()
+        user.name = data.get('name', user.name)
         user.email = data.get('email', user.email)
         user.is_active = data.get('is_active', user.is_active)
 
